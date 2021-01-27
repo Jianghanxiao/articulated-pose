@@ -10,6 +10,8 @@ Func: data rendering from URDF
 """
 import numpy as np
 import pybullet
+import pdb
+import copy 
 
 # here we add one
 import sys
@@ -38,7 +40,7 @@ Dumper.add_representer(str, SafeRepresenter.represent_str)
 # custom libs
 import _init_paths
 from global_info import global_info
-from lib.data_utils import get_model_pts, get_urdf
+from lib.data_utils import get_model_pts, get_urdf, get_urdf_mobility
 
 # Step through simulation time
 def step_simulation():
@@ -77,11 +79,12 @@ def render_data(data_root, name_obj, cur_urdf, args=None, cam_dis=1, urdf_file='
     if not _WRITE_FLAG:
         camInfo  = pybullet.getDebugVisualizerCamera()
 
-    tree_urdf = ET.parse("{}/{}/syn.urdf".format(path_urdf, cur_urdf))
-    root      = tree_urdf.getroot()
+    # tree_urdf = ET.parse("{}/{}/syn.urdf".format(path_urdf, cur_urdf))
+    # tree_urdf = ET.parse("{}/{}/mobility.urdf".format(path_urdf, cur_urdf))
+    # root      = tree_urdf.getroot()
 
     num_joints = 0
-    num_joints = len(os.listdir("{}/{}/".format(path_urdf, cur_urdf))) -2
+    num_joints = len(os.listdir("{}/{}/".format(path_urdf, cur_urdf))) - 4
 
     obj_parts = []
     pybullet.setGravity(0, 0, -10)
@@ -89,9 +92,10 @@ def render_data(data_root, name_obj, cur_urdf, args=None, cam_dis=1, urdf_file='
     for i in range(num_joints+1): #
         urdf_file = "{}/{}/syn_p{}.urdf".format(path_urdf, cur_urdf, i)
         print('loading ', urdf_file)
+        # obj_p = pybullet.createVisualShape(urdf_file)
         obj_p = pybullet.loadURDF(urdf_file)
         obj_parts.append(obj_p)
-        if i == 0:
+        if i == 0: 
             for joint in range(pybullet.getNumJoints(obj_parts[i])):
                 print("joint[",joint,"]=", pybullet.getJointInfo(obj_parts[i], joint))
                 pybullet.setJointMotorControl2(obj_parts[i], joint, pybullet.VELOCITY_CONTROL, targetVelocity=0,force=0)
@@ -100,7 +104,7 @@ def render_data(data_root, name_obj, cur_urdf, args=None, cam_dis=1, urdf_file='
     simu_cnt   = 0
     main_start = time.time()
 
-    urdf_ins   = get_urdf("{}/{}".format(path_urdf, cur_urdf))
+    urdf_ins   = get_urdf_mobility("{}/{}".format(path_urdf, cur_urdf))
     num_joints = len(urdf_ins['obj_name']) -1
 
     # instance-wise offset for camera distance
@@ -194,6 +198,10 @@ def render_data(data_root, name_obj, cur_urdf, args=None, cam_dis=1, urdf_file='
                 depth_to_save = 2.0 * far * near / (far  + near - (far - near) * (2 * depth_raw - 1.0))
 
                 np_rgb_arr  = np.reshape(rgb, (h, w, 4))[:, :, :3]
+                # cv2 deal with BGR
+                temp = np_rgb_arr[:, :, 0].copy()
+                np_rgb_arr[:, :, 0] = np_rgb_arr[:, :, 2]
+                np_rgb_arr[:, :, 2] = temp
                 np_depth_arr= np.reshape(depth, (h, w, 1))
                 np_mask_arr = (np.reshape(mask, (h, w, 1))).astype(np.uint8)
                 image_path  = save_path + '/{}/{}'.format(cur_urdf, simu_cnt)
@@ -251,8 +259,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--debug', action='store_true', help='indicating whether in debug mode')
-    parser.add_argument('--dataset', default='shape2motion', help='name of the dataset we use')
-    parser.add_argument('--item', default='eyeglasses', help='name of category we use')
+    parser.add_argument('--dataset', default='sapien', help='name of the dataset we use')
+    parser.add_argument('--item', default='drawer', help='name of category we use')
     parser.add_argument('--dis',   default=3, help='default camera2object distance')
     parser.add_argument('--mode',  default='train', help='mode decides saving folder:train/demo')
     parser.add_argument('--roll', default='30,40', help='camera view angle', required=True)

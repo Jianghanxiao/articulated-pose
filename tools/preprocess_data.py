@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import random as rdn
+import pdb
 
 import h5py
 import yaml
@@ -51,6 +52,7 @@ class PoseDataset():
         self.max_lnk  = 10
         self.root_dir  = root_dir
         self.dataset_render = root_dir + '/render'
+        # models_dir no use
         self.models_dir  = root_dir + '/objects' 
         self.objnamelist = os.listdir(self.dataset_render)
         self.mode        = mode
@@ -109,7 +111,11 @@ class PoseDataset():
                 except:
                     meta[art_index] = None
 
-            tree_urdf     = ET.parse(self.root_dir + "/urdf/" + obj_category + '/' + ins + "/syn.urdf") # todo
+            # For different dataset, the URDF name is a bit different. Because sapien offer the URDF
+            if args.dataset == 'sapien':
+                tree_urdf     = ET.parse(self.root_dir + "/urdf/" + obj_category + '/' + ins + "/mobility.urdf") # todo
+            else:
+              tree_urdf     = ET.parse(self.root_dir + "/urdf/" + obj_category + '/' + ins + "/syn.urdf") # todo  
             root_urdf     = tree_urdf.getroot()
             rpy_xyz       = {}
             list_xyz      = [None] * self.max_lnk
@@ -384,8 +390,8 @@ if __name__ == '__main__':
 
     # 1. collect filenames into all.txt
     collect_file(root_dset, [item], mode=args.mode)
-    # PoseData     = PoseDataset(root_dset, item, is_debug=args.debug, mode=args.mode, selected_list=selected_list)
-    # print('number of images: ', len(PoseData.list_rgb))
+    PoseData     = PoseDataset(root_dset, item, is_debug=args.debug, mode=args.mode, selected_list=selected_list)
+    print('number of images: ', len(PoseData.list_rgb))
 
     # # 2. preprocess and save
     # for i in range(0, len(PoseData.list_rgb)):
