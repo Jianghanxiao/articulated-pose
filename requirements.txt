@@ -24,7 +24,8 @@ cligj==0.5.0
 cloudpickle==0.5.5
 configobj==5.0.6
 constantly==15.1.0
-correlation-cuda==0.0.0
+#correlation-cuda==0.0.0
+correlation==1.0.0
 cryptography==2.3.1
 cycler==0.10.0
 Cython==0.28.5
@@ -82,7 +83,7 @@ mathutils==2.78
 matplotlib==3.0.1
 mccabe==0.6.1
 mistune==0.8.3
-mkl-fft==1.0.4
+#mkl-fft==1.0.6
 mkl-random==1.0.1
 more-itertools==4.3.0
 mpld3==0.3
@@ -97,7 +98,7 @@ notebook==5.6.0
 numpy==1.14.5
 oauthlib==3.0.1
 olefile==0.45.1
-open3d==0.6.0.0
+#open3d-python==0.6.0.0
 opencv-python==3.4.2.17
 pamela==1.0.0
 pandas==0.23.4
@@ -112,7 +113,7 @@ projectq==0.3.6
 prometheus-client==0.3.1
 prompt-toolkit==1.0.15
 protobuf==3.6.0
-protonets==0.0.1
+#protonets==0.0.1
 ptyprocess==0.6.0
 py==1.5.4
 pyasn1==0.4.4
@@ -134,11 +135,11 @@ PyQt5==5.12.1
 PyQt5-sip==4.19.15
 pyquaternion==0.9.5
 pyrender==0.1.32
-pyrr==0.10.1
+#pyrr==0.10.1
 pytest==3.7.3
 python-dateutil==2.7.3
 python-editor==1.0.4
-python-prctl==1.7
+#python-prctl==1.7
 pytz==2018.5
 PyWavefront==0.2.0
 PyWavelets==1.0.0
@@ -178,7 +179,7 @@ traitsui==6.0.0
 trimesh==3.4.0
 Twisted==18.7.0
 typing==3.6.4
-urdfdom-py==0.4.0
+#urdfdom-py==0.4.0
 urllib3==1.24
 visdom==0.1.8.8
 vtk==8.1.2

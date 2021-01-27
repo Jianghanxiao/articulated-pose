@@ -189,20 +189,21 @@ class global_info(object):
 
         # check dataset_name automactically
         group_path = None
-        if platform.uname()[0] == 'Darwin':
-            print("Now it knows it's in my local Mac")
-            base_path = '/Users/DragonX/Downloads/ARC/6DPOSE'
-        elif platform.uname()[1] == 'viz1':
-            base_path = '/home/xiaolong/Downloads/6DPOSE'
-        elif platform.uname()[1] == 'vllab3':
-            base_path = '/mnt/data/lxiaol9/rbo'
-        elif platform.uname()[1] == 'dragon':
-            base_path = '/home/dragon/Documents/CVPR2020'
-        else:
-            base_path = '/work/cascades/lxiaol9/6DPOSE'
-            group_path= '/groups/CESCA-CV'
+        # if platform.uname()[0] == 'Darwin':
+        #     print("Now it knows it's in my local Mac")
+        #     base_path = '/Users/DragonX/Downloads/ARC/6DPOSE'
+        # elif platform.uname()[1] == 'viz1':
+        #     base_path = '/home/xiaolong/Downloads/6DPOSE'
+        # elif platform.uname()[1] == 'vllab3':
+        #     base_path = '/mnt/data/lxiaol9/rbo'
+        # elif platform.uname()[1] == 'dragon':
+        #     base_path = '/home/dragon/Documents/CVPR2020'
+        # else:
+        #     base_path = '/work/cascades/lxiaol9/6DPOSE'
+        #     group_path= '/groups/CESCA-CV'
 
-        self.base_path = base_path
+        # self.base_path = base_path
+        self.base_path = '/home/hja40/Desktop/Research/articulated-pose'
         self.group_path= group_path
 
 if __name__ == '__main__':
