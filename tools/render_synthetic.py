@@ -215,6 +215,7 @@ def render_data(data_root, name_obj, cur_urdf, args=None, cam_dis=1, urdf_file='
                     joint_pos = OrderedDict()
                     for joint in range(pybullet.getNumJoints(obj_parts[0])):
                         lstate = pybullet.getLinkState(obj_parts[0], linkIndex=joint, computeForwardKinematics=True)
+                        pdb.set_trace()
                         joint_pos[joint] = OrderedDict(
                                             [(0, list(lstate[0])),
                                              (1, list(lstate[1])),
@@ -280,7 +281,7 @@ if __name__ == "__main__":
         _CREATE  = True
         _USE_GUI = True
     else:
-        _WRITE   = True
+        _WRITE   = False
         _RENDER  = True
         _CREATE  = True
         _USE_GUI = False

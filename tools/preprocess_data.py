@@ -41,6 +41,8 @@ from lib.vis_utils import plot3d_pts
 from lib.data_utils import collect_file, split_dataset
 from global_info import global_info
 
+from lib.data_utils import get_model_pts, get_urdf, get_urdf_mobility
+
 
 class PoseDataset():
     def __init__(self, root_dir, item, num_points=1024,  objs=[], add_noise=False, noise_trans=0, mode='train', refine=False, selected_list=None, is_debug=False):
@@ -111,53 +113,55 @@ class PoseDataset():
                 except:
                     meta[art_index] = None
 
-            # For different dataset, the URDF name is a bit different. Because sapien offer the URDF
+            # Deal with different dataset in this part to parse the URDF
+            urdf_path = self.root_dir + "/urdf/" + obj_category + '/' + ins
             if args.dataset == 'sapien':
-                tree_urdf     = ET.parse(self.root_dir + "/urdf/" + obj_category + '/' + ins + "/mobility.urdf") # todo
+                urdf_ins = get_urdf_mobility(urdf_path)
             else:
-              tree_urdf     = ET.parse(self.root_dir + "/urdf/" + obj_category + '/' + ins + "/syn.urdf") # todo  
-            root_urdf     = tree_urdf.getroot()
-            rpy_xyz       = {}
-            list_xyz      = [None] * self.max_lnk
-            list_rpy      = [None] * self.max_lnk
-            list_box      = [None] * self.max_lnk
-            # ['obj'] ['link/joint']['xyz/rpy'] [0, 1, 2, 3, 4]
-            num_links     = 0
-            for link in root_urdf.iter('link'):
-                num_links += 1
-                index_link = None
-                if link.attrib['name']=='base_link':
-                    index_link = 0
-                else:
-                    index_link = int(link.attrib['name'])
-                for visual in link.iter('visual'):
-                    for origin in visual.iter('origin'):
-                        list_xyz[index_link] = [float(x) for x in origin.attrib['xyz'].split()]
-                        list_rpy[index_link] = [float(x) for x in origin.attrib['rpy'].split()]
+                urdf_ins = get_urdf(urdf_path)
+            # root_urdf     = tree_urdf.getroot()
+            # rpy_xyz       = {}
+            # list_xyz      = [None] * self.max_lnk
+            # list_rpy      = [None] * self.max_lnk
+            # list_box      = [None] * self.max_lnk
+            # # ['obj'] ['link/joint']['xyz/rpy'] [0, 1, 2, 3, 4]
+            # num_links     = 0
+            # for link in root_urdf.iter('link'):
+            #     num_links += 1
+            #     index_link = None
+                
+            #     if link.attrib['name']=='base_link':
+            #         index_link = 0
+            #     else:
+            #         index_link = int(link.attrib['name'])
+            #     for visual in link.iter('visual'):
+            #         for origin in visual.iter('origin'):
+            #             list_xyz[index_link] = [float(x) for x in origin.attrib['xyz'].split()]
+            #             list_rpy[index_link] = [float(x) for x in origin.attrib['rpy'].split()]
 
-            rpy_xyz['xyz']   = list_xyz
-            rpy_xyz['rpy']   = list_rpy
-            # rpy_xyz['box']   = list_box
-            urdf_ins['link'] = rpy_xyz
+            # rpy_xyz['xyz']   = list_xyz
+            # rpy_xyz['rpy']   = list_rpy
+            # # rpy_xyz['box']   = list_box
+            # urdf_ins['link'] = rpy_xyz
 
-            rpy_xyz       = {}
-            list_xyz      = [None] * self.max_lnk
-            list_rpy      = [None] * self.max_lnk
-            list_axis     = [None] * self.max_lnk
-            # here we still have to read the URDF file
-            for joint in root_urdf.iter('joint'):
-                index_joint = int(joint.attrib['name'][0])
-                for origin in joint.iter('origin'):
-                    list_xyz[index_joint] = [float(x) for x in origin.attrib['xyz'].split()]
-                    list_rpy[index_joint] = [float(x) for x in origin.attrib['rpy'].split()]
-                for axis in joint.iter('axis'):
-                    list_axis[index_joint]= [float(x) for x in axis.attrib['xyz'].split()]
-            rpy_xyz['xyz']       = list_xyz
-            rpy_xyz['rpy']       = list_rpy
-            rpy_xyz['axis']      = list_axis
+            # rpy_xyz       = {}
+            # list_xyz      = [None] * self.max_lnk
+            # list_rpy      = [None] * self.max_lnk
+            # list_axis     = [None] * self.max_lnk
+            # # here we still have to read the URDF file
+            # for joint in root_urdf.iter('joint'):
+            #     index_joint = int(joint.attrib['name'][0])
+            #     for origin in joint.iter('origin'):
+            #         list_xyz[index_joint] = [float(x) for x in origin.attrib['xyz'].split()]
+            #         list_rpy[index_joint] = [float(x) for x in origin.attrib['rpy'].split()]
+            #     for axis in joint.iter('axis'):
+            #         list_axis[index_joint]= [float(x) for x in axis.attrib['xyz'].split()]
+            # rpy_xyz['xyz']       = list_xyz
+            # rpy_xyz['rpy']       = list_rpy
+            # rpy_xyz['axis']      = list_axis
 
-            urdf_ins['joint']    = rpy_xyz
-            urdf_ins['num_links']= num_links
+            # urdf_ins['joint']    = rpy_xyz
+            # urdf_ins['num_links']= num_links
 
             meta_dict_obj[ins]  = meta
             urdf_dict_obj[ins]  = urdf_ins
@@ -191,35 +195,36 @@ class PoseDataset():
             os.makedirs(h5_save_path)
         h5_save_name       = h5_save_path  + '/{}.h5'.format(frame_order)
         num_parts          = self.urdf_dict[obj_category][ins]['num_links']
+        new_num_parts = num_parts - 1
 
         model_offsets      = self.urdf_dict[obj_category][ins]['link']
         joint_offsets      = self.urdf_dict[obj_category][ins]['joint']
 
-        parts_model_point  = [None]*num_parts
-        parts_world_point  = [None]*num_parts
-        parts_target_point = [None]*num_parts
+        parts_model_point  = [None]*new_num_parts
+        parts_world_point  = [None]*new_num_parts
+        parts_target_point = [None]*new_num_parts
 
-        parts_cloud_cam    = [None]*num_parts
-        parts_cloud_world  = [None]*num_parts
-        parts_cloud_canon  = [None]*num_parts
-        parts_cloud_urdf   = [None]*num_parts
-        parts_cloud_norm   = [None]*num_parts
+        parts_cloud_cam    = [None]*new_num_parts
+        parts_cloud_world  = [None]*new_num_parts
+        parts_cloud_canon  = [None]*new_num_parts
+        parts_cloud_urdf   = [None]*new_num_parts
+        parts_cloud_norm   = [None]*new_num_parts
 
-        parts_world_pos    = [None]*num_parts
-        parts_world_orn    = [None]*num_parts
-        parts_urdf_pos     = [None]*num_parts
-        parts_urdf_orn     = [None]*num_parts
-        parts_urdf_box     = [None]*num_parts
+        parts_world_pos    = [None]*new_num_parts
+        parts_world_orn    = [None]*new_num_parts
+        parts_urdf_pos     = [None]*new_num_parts
+        parts_urdf_orn     = [None]*new_num_parts
+        parts_urdf_box     = [None]*new_num_parts
 
-        parts_model2world  = [None]*num_parts
-        parts_canon2urdf   = [None]*num_parts
-        parts_target_r     = [None]*num_parts
-        parts_target_t     = [None]*num_parts
+        parts_model2world  = [None]*new_num_parts
+        parts_canon2urdf   = [None]*new_num_parts
+        parts_target_r     = [None]*new_num_parts
+        parts_target_t     = [None]*new_num_parts
 
-        parts_mask         = [None]*num_parts
-        choose_x           = [None]*num_parts
-        choose_y           = [None]*num_parts
-        choose_to_whole    = [None]*num_parts
+        parts_mask         = [None]*new_num_parts
+        choose_x           = [None]*new_num_parts
+        choose_y           = [None]*new_num_parts
+        choose_to_whole    = [None]*new_num_parts
 
         # rgb/depth/label
         print('current image: ', self.list_rgb[index])
@@ -236,37 +241,41 @@ class PoseDataset():
 
         parts_world_pos[0] = np.array([0, 0, 0])
         parts_world_orn[0] = np.array([0, 0, 0, 1])
-        for link in range(0, num_parts):
+        # SAPIEN: skip the virtual base part
+        for link in range(1, num_parts):
             if link >0:
-                parts_world_pos[link] = np.array(pose_dict['obj'][link-1][4]).astype(np.float32)
-                parts_world_orn[link] = np.array(pose_dict['obj'][link-1][5]).astype(np.float32)
+                parts_world_pos[link-1] = np.array(pose_dict['obj'][link-1][4]).astype(np.float32)
+                parts_world_orn[link-1] = np.array(pose_dict['obj'][link-1][5]).astype(np.float32)
 
-        for link in range(num_parts):
+        for link in range(1, num_parts):
             if link == 1 and num_parts==2:
-                parts_urdf_pos[link] = np.array(urdf_dict['joint']['xyz'][link-1]) # todo, accumulate joints pffsets != link offsets
+                parts_urdf_pos[link] = np.array(urdf_dict['joint']['xyz'][link-1]) # todo, accumulate joints offsets != link offsets
             else:
-                parts_urdf_pos[link] = -np.array(urdf_dict['link']['xyz'][link])
-            parts_urdf_orn[link] = np.array(urdf_dict['link']['rpy'][link])
+                # Only change this branch for SAPIEN data
+                parts_urdf_pos[link-1] = -np.array(urdf_dict['link']['xyz'][link][0])
+            parts_urdf_orn[link-1] = np.array(urdf_dict['link']['rpy'][link][0])
 
-        for k in range(num_parts):
-            center_world_orn   = parts_world_orn[k]
+
+        for k in range(1, num_parts):
+            center_world_orn   = parts_world_orn[k-1]
             center_world_orn   = np.array([center_world_orn[3], center_world_orn[0], center_world_orn[1], center_world_orn[2]])
             my_model2world_r   = quaternion_matrix(center_world_orn)[:4, :4] # [w, x, y, z]
-            my_model2world_t   = parts_world_pos[k]
+            my_model2world_t   = parts_world_pos[k-1]
             my_model2world_mat = np.copy(my_model2world_r)
             for m in range(3):
                 my_model2world_mat[m, 3] = my_model2world_t[m]
             my_world2camera_mat   = viewMat
             my_camera2clip_mat    = projMat
             my_model2camera_mat   = np.dot(my_world2camera_mat, my_model2world_mat)
-            parts_model2world[k]  = my_model2world_mat
+            parts_model2world[k-1]  = my_model2world_mat
 
         # depth to cloud data
-        mask = np.array((label[:, :] < num_parts) & (label[:, :] > -1)).astype(np.uint8)
+        # SAPIEN, throw away the label 0 for virtual base link
+        mask = np.array((label[:, :] < num_parts) & (label[:, :] > 0)).astype(np.uint8)
         mask_whole = np.copy(mask)
-        for n in range(num_parts):
-            parts_mask[n] = np.array((label[:, :]==(n))).astype(np.uint8)
-            choose_to_whole[n] = np.where(parts_mask[n]>0)
+        for n in range(1, num_parts):
+            parts_mask[n-1] = np.array((label[:, :]==(n))).astype(np.uint8)
+            choose_to_whole[n-1] = np.where(parts_mask[n-1]>0)
 
         #>>>>>>>>>>------- rendering target pcloud from depth image --------<<<<<<<<<#
         # first get projected map
@@ -280,23 +289,24 @@ class PoseDataset():
         w_channel = -depth
         projected_map = np.stack([u_map * w_channel, v_map * w_channel, depth, w_channel]).transpose([1, 2, 0])
         projected_map1 = np.stack([u_map * w_channel, v1_map * w_channel, depth, w_channel]).transpose([1, 2, 0])
-        for s in range(num_parts):
-            x_set, y_set   = choose_to_whole[s]
+        for s in range(1, num_parts):
+            x_set, y_set   = choose_to_whole[s-1]
             if len(x_set)<10:
+                print(ins, art_status, frame_order)
                 print('data is empty, skipping!!!')
                 return None
             else:
-                choose_x[s] = x_set
-                choose_y[s] = y_set
+                choose_x[s-1] = x_set
+                choose_y[s-1] = y_set
 
             # ---------------> from projected map into target part_cloud
             # order: cam->world->canon)
-            projected_points = projected_map[choose_x[s][:].astype(np.uint16), choose_y[s][:].astype(np.uint16), :]
+            projected_points = projected_map[choose_x[s-1][:].astype(np.uint16), choose_y[s-1][:].astype(np.uint16), :]
             projected_points = np.reshape(projected_points, [-1, 4])
             depth_channel    = - projected_points[:, 3:4]
             cloud_cam        = np.dot(projected_points[:, 0:2] - np.dot(depth_channel, projMat[0:2, 2:3].T), np.linalg.pinv(projMat[:2, :2].T))
 
-            projected_points1 = projected_map1[choose_x[s][:].astype(np.uint16), choose_y[s][:].astype(np.uint16), :]
+            projected_points1 = projected_map1[choose_x[s-1][:].astype(np.uint16), choose_y[s-1][:].astype(np.uint16), :]
             projected_points1 = np.reshape(projected_points1, [-1, 4])
             cloud_cam_real    = np.dot(projected_points1[:, 0:2] - np.dot(depth_channel, projMat[0:2, 2:3].T), np.linalg.pinv(projMat[:2, :2].T))
             cloud_cam_real    = np.concatenate((cloud_cam_real, depth_channel), axis=1)
@@ -308,34 +318,35 @@ class PoseDataset():
             camera_pose_mat = np.linalg.pinv(viewMat.T)
             camera_pose_mat[:3, :] = - camera_pose_mat[:3, :]
             cloud_world    = np.dot(cloud_cam_full, camera_pose_mat)
-            cloud_canon    = np.dot(cloud_world, np.linalg.pinv(parts_model2world[s].T))
+            cloud_canon    = np.dot(cloud_world, np.linalg.pinv(parts_model2world[s-1].T))
 
             # canon points should be points coordinates centered in the inertial frame
-            parts_cloud_cam[s]    = cloud_cam_real[:, :3]
-            parts_cloud_world[s]  = cloud_world[:, :3]
-            parts_cloud_canon[s]  = cloud_canon[:, :3]
+            parts_cloud_cam[s-1]    = cloud_cam_real[:, :3]
+            parts_cloud_world[s-1]  = cloud_world[:, :3]
+            parts_cloud_canon[s-1]  = cloud_canon[:, :3]
 
-        for k in range(num_parts):
-            center_joint_orn   = parts_urdf_orn[k]
+        for k in range(1, num_parts):
+            center_joint_orn   = parts_urdf_orn[k-1]
             my_canon2urdf_r    = euler_matrix(center_joint_orn[0], center_joint_orn[1], center_joint_orn[2])[:4, :4] # [w, x, y, z]
-            my_canon2urdf_t    = parts_urdf_pos[k]
+            my_canon2urdf_t    = parts_urdf_pos[k-1]
             my_canon2urdf_mat  = my_canon2urdf_r
             for m in range(3):
                 my_canon2urdf_mat[m, 3] = my_canon2urdf_t[m]
-            part_points_space  = np.concatenate((parts_cloud_canon[k], np.ones((parts_cloud_canon[k].shape[0], 1))), axis=1)
-            parts_cloud_urdf[k] = np.dot(part_points_space, my_canon2urdf_mat.T)
+            part_points_space  = np.concatenate((parts_cloud_canon[k-1], np.ones((parts_cloud_canon[k-1].shape[0], 1))), axis=1)
+            parts_cloud_urdf[k-1] = np.dot(part_points_space, my_canon2urdf_mat.T)
 
-        #>>>>>>>>>>>>>>> go to PNCS space
-        for link in range(num_parts):
-            tight_w = max(parts_cloud_urdf[link][:, 0]) - min(parts_cloud_urdf[link][:, 0])
-            tight_l = max(parts_cloud_urdf[link][:, 1]) - min(parts_cloud_urdf[link][:, 1])
-            tight_h = max(parts_cloud_urdf[link][:, 2]) - min(parts_cloud_urdf[link][:, 2])
+        #>>>>>>>>>>>>>>> go to NPCS space
+        # NPCS here is not stored into hdf5
+        for link in range(1, num_parts):
+            tight_w = max(parts_cloud_urdf[link-1][:, 0]) - min(parts_cloud_urdf[link-1][:, 0])
+            tight_l = max(parts_cloud_urdf[link-1][:, 1]) - min(parts_cloud_urdf[link-1][:, 1])
+            tight_h = max(parts_cloud_urdf[link-1][:, 2]) - min(parts_cloud_urdf[link-1][:, 2])
             norm_factor = np.sqrt(1) / np.sqrt(tight_w**2 + tight_l**2 + tight_h**2)
-            base_p = np.array([ min(parts_cloud_urdf[link][:, 0]),  min(parts_cloud_urdf[link][:, 1]),  min(parts_cloud_urdf[link][:, 2]) ]).reshape(1, 3)
-            extre_p = np.array([ max(parts_cloud_urdf[link][:, 0]),  max(parts_cloud_urdf[link][:, 1]),  max(parts_cloud_urdf[link][:, 2]) ]).reshape(1, 3)
+            base_p = np.array([ min(parts_cloud_urdf[link-1][:, 0]),  min(parts_cloud_urdf[link-1][:, 1]),  min(parts_cloud_urdf[link-1][:, 2]) ]).reshape(1, 3)
+            extre_p = np.array([ max(parts_cloud_urdf[link-1][:, 0]),  max(parts_cloud_urdf[link-1][:, 1]),  max(parts_cloud_urdf[link-1][:, 2]) ]).reshape(1, 3)
             center_p = (extre_p - base_p) / 2 * norm_factor
 
-            parts_cloud_norm[link] = (parts_cloud_urdf[link][:, :3] - base_p) * norm_factor + np.array([0.5, 0.5, 0.5]).reshape(1, 3) - center_p.reshape(1, 3)
+            parts_cloud_norm[link-1] = (parts_cloud_urdf[link-1][:, :3] - base_p) * norm_factor + np.array([0.5, 0.5, 0.5]).reshape(1, 3) - center_p.reshape(1, 3)
 
         x_set_pcloud = np.concatenate(choose_x, axis=0)
         y_set_pcloud = np.concatenate(choose_y, axis=0)
@@ -394,8 +405,8 @@ if __name__ == '__main__':
     print('number of images: ', len(PoseData.list_rgb))
 
     # # 2. preprocess and save
-    # for i in range(0, len(PoseData.list_rgb)):
-    #     data = PoseData.__preprocess_and_save__(i)
+    for i in range(0, len(PoseData.list_rgb)):
+        data = PoseData.__preprocess_and_save__(i)
 
     # 3. split data into train & test
     split_dataset(root_dset, [item], args, test_ins=infos.datasets[item].test_list, spec_ins=infos.datasets[item].spec_list, train_ins=infos.datasets[item].train_list)
