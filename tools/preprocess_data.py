@@ -293,7 +293,7 @@ class PoseDataset():
             x_set, y_set   = choose_to_whole[s-1]
             if len(x_set)<10:
                 print(ins, art_status, frame_order)
-                print('data is empty, skipping!!!')
+                print('data is empty, skipping!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
                 return None
             else:
                 choose_x[s-1] = x_set

@@ -253,10 +253,14 @@ def get_urdf_mobility(inpath, verbose=True):
             for origin in visual.iter('origin'):
                 if 'xyz' in origin.attrib:
                     list_xyz[index_link].append([float(x) for x in origin.attrib['xyz'].split()])
+                    if([float(x) for x in origin.attrib['xyz'].split()] != [0,0,0]):
+                        print('get_urdf_mobility visual xyz error')
                 else:
                     list_xyz[index_link].append([0, 0, 0])
                 if 'rpy' in origin.attrib:
                     list_rpy[index_link].append([float(x) for x in origin.attrib['rpy'].split()])
+                    if([float(x) for x in origin.attrib['rpy'].split()] != [0,0,0]):
+                        print('get_urdf_mobility visual rpy error')
                 else:
                     list_rpy[index_link].append([0, 0, 0])
             for geometry in visual.iter('geometry'):
