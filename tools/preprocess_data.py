@@ -399,7 +399,8 @@ if __name__ == '__main__':
     infos         = global_info()
     my_dir        = infos.base_path
     root_dset     = my_dir + '/dataset/' + name_dataset
-    selected_list = infos.datasets[item].train_list # default None, if specifies, will only choose specified instances
+    # selected_list = infos.datasets[item].train_list # default None, if specifies, will only choose specified instances
+    selected_list = None
     #>>>>>>>>>>>>>>>>>>>>>>>>> config end here >>>>>>>>>>>>>>>>>>>#
 
     # 1. collect filenames into all.txt

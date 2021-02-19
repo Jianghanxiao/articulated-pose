@@ -118,19 +118,19 @@ if __name__ == '__main__':
             # batch testing
             print('Entering testing mode using test set')
             test_data = Dataset(
-            root_dir=root_data,
-            ctgy_obj=args.item,
-            mode=args.data_mode,
-            name_dset=args.name_data,
-            batch_size=batch_size,
-            n_max_parts=n_max_parts,
-            add_noise=conf.is_train_data_add_noise(),
-            nocs_type=nocs_type,
-            parametri_type=conf.get_parametri_type(),
-            fixed_order=True,
-            first_n=conf.get_train_data_first_n(),
-            is_debug=is_debug,
-            is_gen=is_gen)
+                root_dir=root_data,
+                ctgy_obj=args.item,
+                mode=args.data_mode,
+                name_dset=args.name_data,
+                batch_size=batch_size,
+                n_max_parts=n_max_parts,
+                add_noise=conf.is_train_data_add_noise(),
+                nocs_type=nocs_type,
+                parametri_type=conf.get_parametri_type(),
+                fixed_order=True,
+                first_n=conf.get_train_data_first_n(),
+                is_debug=is_debug,
+                is_gen=is_gen)
             if args.data_mode == 'demo':
                 save_dir = conf.get_demo_prediction_dir()
             else:
