@@ -174,22 +174,23 @@ if __name__ == '__main__':
                 is_debug=is_debug,
                 is_gen=is_gen)
 
-            # # unseen instances
-            # val2_data = Dataset(
-            #     root_dir=root_data,
-            #     ctgy_obj=args.item,
-            #     mode='test',
-            #     name_dset=args.name_data,
-            #     batch_size=batch_size,
-            #     n_max_parts=n_max_parts,
-            #     add_noise=conf.is_val_data_add_noise(),
-            #     nocs_type=nocs_type,
-            #     domain='unseen',
-            #     parametri_type=conf.get_parametri_type(),
-            #     fixed_order=True,
-            #     first_n=conf.get_val_data_first_n(),
-            #     is_debug=is_debug,        
-            #     is_gen=is_gen)
+            # unseen instances
+            val2_data = Dataset(
+                root_dir=root_data,
+                ctgy_obj=args.item,
+                mode='test',
+                name_dset=args.name_data,
+                batch_size=batch_size,
+                n_max_parts=n_max_parts,
+                add_noise=conf.is_val_data_add_noise(),
+                nocs_type=nocs_type,
+                domain='unseen',
+                parametri_type=conf.get_parametri_type(),
+                fixed_order=True,
+                first_n=conf.get_val_data_first_n(),
+                is_debug=is_debug,        
+                is_gen=is_gen)
+
 
             net.train(
                 sess,
