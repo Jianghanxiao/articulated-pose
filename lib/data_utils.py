@@ -29,6 +29,8 @@ from matplotlib.patches import Circle, Wedge, Polygon
 from matplotlib.collections import PatchCollection
 from descartes import PolygonPatch
 
+import pdb
+
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 plt.ioff()

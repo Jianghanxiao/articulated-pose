@@ -7,6 +7,7 @@ import pickle
 import re
 import argparse
 import glob
+import pdb
 
 import _init_paths
 from network_config import NetworkConfig
@@ -44,6 +45,10 @@ class Dataset:
         self.nocs_type    = nocs_type
         self.line_space   = parametri_type
         self.hdf5_file_list = []
+
+        self.mode = mode
+        self.domain = domain
+
         if mode == 'train':
             idx_txt = self.root_dir + '/splits/{}/{}/train.txt'.format(ctgy_obj, num_expr)
         elif mode == 'demo':
@@ -176,7 +181,7 @@ class Dataset:
             offsets     = None
             for item in all_items:
                 if self.name_dset == 'sapien':
-                    path_urdf = self.root_dir + '/objects/' + '/' + obj_category + '/' + item
+                    path_urdf = self.root_dir + '/urdf/' + '/' + obj_category + '/' + item
                     urdf_ins   = get_urdf_mobility(path_urdf)
                 elif self.name_dset == 'shape2motion':
                     path_urdf = self.root_dir + '/urdf/' + '/' + obj_category
@@ -202,21 +207,21 @@ class Dataset:
             directory = root_dset + "/pickle/"
             if not os.path.exists(directory):
                 os.makedirs(directory)
-            with open(root_dset + "/pickle/{}.pkl".format(obj_category), "wb") as f:
+            with open(root_dset + "/pickle/{}-{}-{}.pkl".format(obj_category, self.mode, self.domain), "wb") as f:
                 pickle.dump(all_factors, f)
-            with open(root_dset + "/pickle/{}_corners.pkl".format(obj_category), "wb") as fc:
+            with open(root_dset + "/pickle/{}-{}-{}_corners.pkl".format(obj_category, self.mode, self.domain), "wb") as fc:
                 pickle.dump(all_corners, fc)
-            with open(root_dset + "/pickle/{}_pts.pkl".format(obj_category), 'wb') as fp:
+            with open(root_dset + "/pickle/{}-{}-{}_pts.pkl".format(obj_category, self.mode, self.domain), 'wb') as fp:
                 pickle.dump(pts_m, fp)
         else:
             root_dset   = self.root_dir
             # open a file, where you stored the pickled data
-            file = open(root_dset + "/pickle/{}.pkl".format(obj_category),"rb")
+            file = open(root_dset + "/pickle/{}-{}-{}.pkl".format(obj_category, self.mode, self.domain),"rb")
             # dump information to that file
             data = pickle.load(file)
             all_factors = data
             file.close()
-            fc = open(root_dset + "/pickle/{}_corners.pkl".format(obj_category), "rb")
+            fc = open(root_dset + "/pickle/{}-{}-{}_corners.pkl".format(obj_category, self.mode, self.domain), "rb")
             all_corners = pickle.load(fc)
             fc.close()
         if is_debug:
@@ -233,7 +238,7 @@ class Dataset:
                 path_urdf = self.root_dir + '/urdf/' + '/' + obj_category
                 urdf_ins   = get_urdf("{}/{}".format(path_urdf, item))
             elif self.name_dset == 'sapien':
-                path_urdf = self.root_dir + '/objects/' + '/' + obj_category + '/' + item
+                path_urdf = self.root_dir + '/urdf/' + '/' + obj_category + '/' + item
                 urdf_ins   = get_urdf_mobility(path_urdf)
             else:
                 path_urdf = self.root_dir + '/urdf/' + '/' + obj_category
@@ -736,7 +741,7 @@ if __name__=='__main__':
 
     random.seed(30)
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config_file', default='./network_config.yml', help='YAML configuration file')
+    parser.add_argument('--config_file', default='/home/hja40/Desktop/Research/articulated-pose/cfg/network_config.yml', help='YAML configuration file')
     parser.add_argument('--dataset', default='shape2motion', help='name of dataset')
     parser.add_argument('--item', default='oven', help='name of the dataset we use')
     # parser.add_argument('--dataset', default='sapien', help='name of the dataset we use')
@@ -777,7 +782,7 @@ if __name__=='__main__':
     name_dset  = args.dataset
 
     if args.dataset == 'sapien':
-        root_dset = group_path + '/dataset/' + args.dataset
+        root_dset = base_path + '/dataset/' + args.dataset
     else:
         root_dset = base_path + '/dataset/' + args.dataset
 
@@ -807,98 +812,98 @@ if __name__=='__main__':
         is_testing=is_testing,
         is_gen=is_gen)
 
-    # np.random.seed(0)
-    # selected_index = np.random.randint(1000, size=20)
-    selected_index = np.arange(0, 10)
-    # selected_index = [train_data.basename_list.index('0016_0_0')] + list(np.arange(0, len(train_data.basename_list)))
-    for i in selected_index:
-        basename =  train_data.basename_list[i]
-        if basename.split('_')[0] not in test_ins:
-            continue
-        instance = basename.split('_')[0]
-        print('reading data point: ', i, train_data.basename_list[i])
-        if is_debug or is_testing:
-            data_pts, _ =  train_data.fetch_data_at_index(i)
-        else:
-            data_pts=  train_data.fetch_data_at_index(i)
-        # print('fetching ', path)
-        for keys, item in data_pts.items():
-            print(keys, item.shape)
-        # rgb_img   = data_pts['img']
-        input_pts = data_pts['P']
-        nocs_gt   = {}
-        nocs_gt['pn']   = data_pts['nocs_gt']
-        if args.nocs_type == 'AC':
-            nocs_gt['gn']   = data_pts['nocs_gt_g']
-        # print('nocs_gt has {}, {}'.format( np.amin(nocs_gt['pn'], axis=0), np.amax(nocs_gt, axis=0)))
-        mask_gt   = data_pts['cls_gt']
-        num_pts = input_pts.shape[0]
-        num_parts = n_max_parts
-        part_idx_list_gt   = []
-        for j in range(num_parts):
-            part_idx_list_gt.append(np.where(mask_gt==j)[0])
-        if not args.test:
-            heatmap_gt= data_pts['heatmap_gt']
-            unitvec_gt= data_pts['unitvec_gt']
-            orient_gt = data_pts['orient_gt']
-            joint_cls_gt = data_pts['joint_cls_gt']
-            joint_params_gt = data_pts['joint_params_gt']
-            # print('joint_params_gt is: ', joint_params_gt)
-            joint_idx_list_gt   = []
-            for j in range(num_parts):
-                joint_idx_list_gt.append(np.where(joint_cls_gt==j)[0])
+    # # np.random.seed(0)
+    # # selected_index = np.random.randint(1000, size=20)
+    # selected_index = np.arange(0, 10)
+    # # selected_index = [train_data.basename_list.index('0016_0_0')] + list(np.arange(0, len(train_data.basename_list)))
+    # for i in selected_index:
+    #     basename =  train_data.basename_list[i]
+    #     if basename.split('_')[0] not in test_ins:
+    #         continue
+    #     instance = basename.split('_')[0]
+    #     print('reading data point: ', i, train_data.basename_list[i])
+    #     if is_debug or is_testing:
+    #         data_pts, _ =  train_data.fetch_data_at_index(i)
+    #     else:
+    #         data_pts=  train_data.fetch_data_at_index(i)
+    #     # print('fetching ', path)
+    #     for keys, item in data_pts.items():
+    #         print(keys, item.shape)
+    #     # rgb_img   = data_pts['img']
+    #     input_pts = data_pts['P']
+    #     nocs_gt   = {}
+    #     nocs_gt['pn']   = data_pts['nocs_gt']
+    #     if args.nocs_type == 'AC':
+    #         nocs_gt['gn']   = data_pts['nocs_gt_g']
+    #     # print('nocs_gt has {}, {}'.format( np.amin(nocs_gt['pn'], axis=0), np.amax(nocs_gt, axis=0)))
+    #     mask_gt   = data_pts['cls_gt']
+    #     num_pts = input_pts.shape[0]
+    #     num_parts = n_max_parts
+    #     part_idx_list_gt   = []
+    #     for j in range(num_parts):
+    #         part_idx_list_gt.append(np.where(mask_gt==j)[0])
+    #     if not args.test:
+    #         heatmap_gt= data_pts['heatmap_gt']
+    #         unitvec_gt= data_pts['unitvec_gt']
+    #         orient_gt = data_pts['orient_gt']
+    #         joint_cls_gt = data_pts['joint_cls_gt']
+    #         joint_params_gt = data_pts['joint_params_gt']
+    #         # print('joint_params_gt is: ', joint_params_gt)
+    #         joint_idx_list_gt   = []
+    #         for j in range(num_parts):
+    #             joint_idx_list_gt.append(np.where(joint_cls_gt==j)[0])
 
-        #>>>>>>>>>>>>>>>>>>>>>------ For segmentation visualization ----
-        # plot_imgs([rgb_img], ['rgb img'], title_name='RGB', sub_name=str(i), show_fig=args.show_fig, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item)
-        plot3d_pts([[input_pts]], [['Part {}'.format(0)]], s=50, title_name=['GT seg on input point cloud'], sub_name=str(i), show_fig=args.show_fig, axis_off=True, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item)
-        plot3d_pts([[input_pts[part_idx_list_gt[j], :] for j in range(num_parts)]], [['Part {}'.format(j) for j in range(num_parts)]], s=50, title_name=['GT seg on input point cloud'], sub_name=str(i), show_fig=args.show_fig, axis_off=True, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item)
-        plot3d_pts([[nocs_gt['gn'][part_idx_list_gt[j], :] for j in range(num_parts)]], [['Part {}'.format(j) for j in range(num_parts)]], s=50, title_name=['GT global NOCS'], sub_name=str(i), show_fig=args.show_fig, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item)
-        plot3d_pts([[nocs_gt['pn'][part_idx_list_gt[j], :] for j in range(num_parts)]], [['Part {}'.format(j) for j in range(num_parts)]], s=50, title_name=['GT part NOCS'], sub_name=str(i), show_fig=args.show_fig, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item)
-        # for j in range(num_parts):
-        #     plot3d_pts([[nocs_gt['pn'][part_idx_list_gt[j], :] ]], [['Part {}'.format(j)]], s=15, dpi=200, title_name=['GT part NOCS'], color_channel=[[ nocs_gt['pn'][part_idx_list_gt[j], :] ]], sub_name='{}_part_{}'.format(i, j) , show_fig=args.show_fig, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item)
-        #     plot3d_pts([[nocs_gt['gn'][part_idx_list_gt[j], :] ]], [['Part {}'.format(j)]], s=15, dpi=200, title_name=['GT global NOCS'], color_channel=[[ nocs_gt['gn'][part_idx_list_gt[j], :] ]], sub_name='{}_part_{}'.format(i, j), show_fig=args.show_fig, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item)
+    #     #>>>>>>>>>>>>>>>>>>>>>------ For segmentation visualization ----
+    #     # plot_imgs([rgb_img], ['rgb img'], title_name='RGB', sub_name=str(i), show_fig=args.show_fig, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item)
+    #     plot3d_pts([[input_pts]], [['Part {}'.format(0)]], s=50, title_name=['GT seg on input point cloud'], sub_name=str(i), show_fig=args.show_fig, axis_off=True, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item)
+    #     plot3d_pts([[input_pts[part_idx_list_gt[j], :] for j in range(num_parts)]], [['Part {}'.format(j) for j in range(num_parts)]], s=50, title_name=['GT seg on input point cloud'], sub_name=str(i), show_fig=args.show_fig, axis_off=True, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item)
+    #     plot3d_pts([[nocs_gt['gn'][part_idx_list_gt[j], :] for j in range(num_parts)]], [['Part {}'.format(j) for j in range(num_parts)]], s=50, title_name=['GT global NOCS'], sub_name=str(i), show_fig=args.show_fig, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item)
+    #     plot3d_pts([[nocs_gt['pn'][part_idx_list_gt[j], :] for j in range(num_parts)]], [['Part {}'.format(j) for j in range(num_parts)]], s=50, title_name=['GT part NOCS'], sub_name=str(i), show_fig=args.show_fig, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item)
+    #     # for j in range(num_parts):
+    #     #     plot3d_pts([[nocs_gt['pn'][part_idx_list_gt[j], :] ]], [['Part {}'.format(j)]], s=15, dpi=200, title_name=['GT part NOCS'], color_channel=[[ nocs_gt['pn'][part_idx_list_gt[j], :] ]], sub_name='{}_part_{}'.format(i, j) , show_fig=args.show_fig, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item)
+    #     #     plot3d_pts([[nocs_gt['gn'][part_idx_list_gt[j], :] ]], [['Part {}'.format(j)]], s=15, dpi=200, title_name=['GT global NOCS'], color_channel=[[ nocs_gt['gn'][part_idx_list_gt[j], :] ]], sub_name='{}_part_{}'.format(i, j), show_fig=args.show_fig, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item)
 
-        if not args.test:
-            plot3d_pts([[input_pts[joint_idx_list_gt[j], :] for j in range(num_parts)]], [['unassigned Pts'] + ['Pts of joint {}'.format(j) for j in range(1, num_parts)]], s=15, \
-                  title_name=['GT association of pts to joints '], sub_name=str(i), show_fig=args.show_fig, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item, axis_off=True)
-            plot3d_pts([[ input_pts ]], [['Part 0-{}'.format(num_parts-1)]], s=15, \
-                  dpi=200, title_name=['Input Points distance heatmap'], color_channel=[[250*np.concatenate([heatmap_gt.reshape(-1, 1), np.zeros((heatmap_gt.shape[0], 2))], axis=1)]], show_fig=args.show_fig)
+    #     if not args.test:
+    #         plot3d_pts([[input_pts[joint_idx_list_gt[j], :] for j in range(num_parts)]], [['unassigned Pts'] + ['Pts of joint {}'.format(j) for j in range(1, num_parts)]], s=15, \
+    #               title_name=['GT association of pts to joints '], sub_name=str(i), show_fig=args.show_fig, save_fig=args.save_fig, save_path=root_dset + '/NOCS/' + args.item, axis_off=True)
+    #         plot3d_pts([[ input_pts ]], [['Part 0-{}'.format(num_parts-1)]], s=15, \
+    #               dpi=200, title_name=['Input Points distance heatmap'], color_channel=[[250*np.concatenate([heatmap_gt.reshape(-1, 1), np.zeros((heatmap_gt.shape[0], 2))], axis=1)]], show_fig=args.show_fig)
 
-            thres_r       = 0.2
-            offset        = unitvec_gt * (1- heatmap_gt.reshape(-1, 1)) * thres_r
-            joint_pts     = nocs_gt['gn'] + offset
-            joints_list   = []
-            idx           = np.where(joint_cls_gt > 0)[0]
-            plot_arrows(nocs_gt['gn'][idx], [0.5*orient_gt[idx]], whole_pts=nocs_gt['gn'], title_name='{}_joint_pts_axis'.format('GT'), dpi=200, s=25, thres_r=0.1, show_fig=args.show_fig, sparse=True, save=args.save_fig, index=i, save_path=root_dset + '/NOCS/' + args.item)
-            plot_arrows(nocs_gt['gn'][idx], [offset[idx]], whole_pts=nocs_gt['gn'], title_name='{}_joint_offsets'.format('GT'), dpi=200, s=25, thres_r=0.1, show_fig=args.show_fig, sparse=True, save=args.save_fig, index=i, save_path=root_dset + '/NOCS/' + args.item)
-            # plot_arrows(input_pts[idx], [0.5*orient_gt[idx]], whole_pts=input_pts, title_name='{}_joint_pts_axis'.format('GT'), dpi=200, s=25, thres_r=0.2, show_fig=args.show_fig, sparse=True, save=args.save_fig, index=i, save_path=root_dset + '/NOCS/' + args.item)
-            # plot_arrows(input_pts[idx], [offset[idx]], whole_pts=input_pts, title_name='{}_joint_offsets'.format('GT'), dpi=200, s=25, thres_r=0.2, show_fig=args.show_fig, sparse=True, save=args.save_fig, index=i, save_path=root_dset + '/NOCS/' + args.item)
-        if args.test:
-            # channels_map = ['x', 'y', 'z']
-            # directory = root_dset +  '/NOCS/{}'.format(args.item)
-            # if not os.path.exists(directory):
-            #     os.makedirs(directory)
-            # print('We are saving data into {}'.format(directory))
-            # filename  = directory + '/{}_input_{}.ply'.format(i, 'pc_nocs_color')
-            # write_pointcloud(filename, input_pts, rgb_points=(nocs_gt['pn']*255).astype(np.uint8))
-            # filename  = directory + '/{}_input_{}.ply'.format(i, 'pc')
-            # write_pointcloud(filename, input_pts, rgb_points=((input_pts+1)*50).astype(np.uint8))
-            # for j in range(num_parts):
-            #     filename  = directory + '/{}_gt_{}_{}.ply'.format(i, 'pn', j)
-            #     write_pointcloud(filename, nocs_gt['pn'][part_idx_list_gt[j], :], rgb_points=(nocs_gt['pn'][part_idx_list_gt[j], :]*255).astype(np.uint8))
-            # filename  = directory + '/{}_gt_{}.ply'.format(i, 'gn')
-            # write_pointcloud(filename, nocs_gt['gn'], rgb_points=(nocs_gt['gn']*255).astype(np.uint8))
-            # basename
-            dir_save_h5 = root_dset +  '/results/demo/{}'.format(args.item)
-            if not os.path.exists(dir_save_h5):
-                os.makedirs(dir_save_h5)
-            name_save_h5= dir_save_h5 + '/{}.h5'.format(basename)
-            print('Writing to ', name_save_h5)
-            f = h5py.File(name_save_h5, 'w')
-            f.attrs['basename'] = basename
-            f.create_dataset('P', data=data_pts['P'])
-            f.create_dataset('cls_gt', data=data_pts['cls_gt'])
-            f.create_dataset('nocs_gt', data=data_pts['nocs_gt'])
-            if args.nocs_type == 'AC':
-                f.create_dataset('nocs_gt_g', data=data_pts['nocs_gt_g'])
-            f.close()
+    #         thres_r       = 0.2
+    #         offset        = unitvec_gt * (1- heatmap_gt.reshape(-1, 1)) * thres_r
+    #         joint_pts     = nocs_gt['gn'] + offset
+    #         joints_list   = []
+    #         idx           = np.where(joint_cls_gt > 0)[0]
+    #         plot_arrows(nocs_gt['gn'][idx], [0.5*orient_gt[idx]], whole_pts=nocs_gt['gn'], title_name='{}_joint_pts_axis'.format('GT'), dpi=200, s=25, thres_r=0.1, show_fig=args.show_fig, sparse=True, save=args.save_fig, index=i, save_path=root_dset + '/NOCS/' + args.item)
+    #         plot_arrows(nocs_gt['gn'][idx], [offset[idx]], whole_pts=nocs_gt['gn'], title_name='{}_joint_offsets'.format('GT'), dpi=200, s=25, thres_r=0.1, show_fig=args.show_fig, sparse=True, save=args.save_fig, index=i, save_path=root_dset + '/NOCS/' + args.item)
+    #         # plot_arrows(input_pts[idx], [0.5*orient_gt[idx]], whole_pts=input_pts, title_name='{}_joint_pts_axis'.format('GT'), dpi=200, s=25, thres_r=0.2, show_fig=args.show_fig, sparse=True, save=args.save_fig, index=i, save_path=root_dset + '/NOCS/' + args.item)
+    #         # plot_arrows(input_pts[idx], [offset[idx]], whole_pts=input_pts, title_name='{}_joint_offsets'.format('GT'), dpi=200, s=25, thres_r=0.2, show_fig=args.show_fig, sparse=True, save=args.save_fig, index=i, save_path=root_dset + '/NOCS/' + args.item)
+    #     if args.test:
+    #         # channels_map = ['x', 'y', 'z']
+    #         # directory = root_dset +  '/NOCS/{}'.format(args.item)
+    #         # if not os.path.exists(directory):
+    #         #     os.makedirs(directory)
+    #         # print('We are saving data into {}'.format(directory))
+    #         # filename  = directory + '/{}_input_{}.ply'.format(i, 'pc_nocs_color')
+    #         # write_pointcloud(filename, input_pts, rgb_points=(nocs_gt['pn']*255).astype(np.uint8))
+    #         # filename  = directory + '/{}_input_{}.ply'.format(i, 'pc')
+    #         # write_pointcloud(filename, input_pts, rgb_points=((input_pts+1)*50).astype(np.uint8))
+    #         # for j in range(num_parts):
+    #         #     filename  = directory + '/{}_gt_{}_{}.ply'.format(i, 'pn', j)
+    #         #     write_pointcloud(filename, nocs_gt['pn'][part_idx_list_gt[j], :], rgb_points=(nocs_gt['pn'][part_idx_list_gt[j], :]*255).astype(np.uint8))
+    #         # filename  = directory + '/{}_gt_{}.ply'.format(i, 'gn')
+    #         # write_pointcloud(filename, nocs_gt['gn'], rgb_points=(nocs_gt['gn']*255).astype(np.uint8))
+    #         # basename
+    #         dir_save_h5 = root_dset +  '/results/demo/{}'.format(args.item)
+    #         if not os.path.exists(dir_save_h5):
+    #             os.makedirs(dir_save_h5)
+    #         name_save_h5= dir_save_h5 + '/{}.h5'.format(basename)
+    #         print('Writing to ', name_save_h5)
+    #         f = h5py.File(name_save_h5, 'w')
+    #         f.attrs['basename'] = basename
+    #         f.create_dataset('P', data=data_pts['P'])
+    #         f.create_dataset('cls_gt', data=data_pts['cls_gt'])
+    #         f.create_dataset('nocs_gt', data=data_pts['nocs_gt'])
+    #         if args.nocs_type == 'AC':
+    #             f.create_dataset('nocs_gt_g', data=data_pts['nocs_gt_g'])
+    #         f.close()

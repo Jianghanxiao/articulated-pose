@@ -9,6 +9,8 @@ from network_config import NetworkConfig
 from network import Network
 from dataset import Dataset
 from global_info import global_info
+import time
+import pdb
 
 #>>>>>>>>>>>>>>>>>> python lib
 import tensorflow as tf
@@ -20,12 +22,13 @@ if __name__ == '__main__':
     tf.set_random_seed(1234)
     # parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config_file', default='./cfg/network_config.yml', help='YAML configuration file')
+    parser.add_argument('--config_file', default='/home/hja40/Desktop/Research/articulated-pose/cfg/network_config.yml', help='YAML configuration file')
     parser.add_argument('--name_data', default='shape2motion', help='name of the dataset we use')
     parser.add_argument('--item', default='eyeglasses', help='name of the dataset we use')
     parser.add_argument('--num_expr', default=0.01, help='small set data used for testing')
     parser.add_argument('--nocs_type', default='ancsh', help='whether use global or part level NOCS') # default A/B/C
     parser.add_argument('--data_mode', default='test', help='how to split and choose data')
+    parser.add_argument('--gen', action='store_true', help='to split the dataset')
 
     # control model architecture
     parser.add_argument('--pred_joint', action='store_true', help='whether we want to predict joint offsets')
@@ -102,10 +105,14 @@ if __name__ == '__main__':
             print('Starting a new training...')
             sess.run(tf.global_variables_initializer())
 
-        print('Loading data...')
-        if is_debug:
-            data_pts =  train_data.fetch_data_at_index(1)
-            print(data_pts)
+        # print('Loading data...')
+        # if is_debug:
+        #     data_pts =  train_data.fetch_data_at_index(1)
+        #     print(data_pts)
+
+        is_gen = True if args.gen else False
+        
+        start = time.time()
 
         if is_testing:
             # batch testing
@@ -122,7 +129,8 @@ if __name__ == '__main__':
             parametri_type=conf.get_parametri_type(),
             fixed_order=True,
             first_n=conf.get_train_data_first_n(),
-            is_debug=is_debug)
+            is_debug=is_debug,
+            is_gen=is_gen)
             if args.data_mode == 'demo':
                 save_dir = conf.get_demo_prediction_dir()
             else:
@@ -146,7 +154,8 @@ if __name__ == '__main__':
                 parametri_type=conf.get_parametri_type(),
                 fixed_order=False,
                 first_n=conf.get_train_data_first_n(),
-                is_debug=is_debug)
+                is_debug=is_debug,
+                is_gen=is_gen)
 
             # seen instances
             val1_data = Dataset(
@@ -162,31 +171,36 @@ if __name__ == '__main__':
                 parametri_type=conf.get_parametri_type(),
                 fixed_order=True,
                 first_n=conf.get_val_data_first_n(),
-                is_debug=is_debug)
+                is_debug=is_debug,
+                is_gen=is_gen)
 
-            # unseen instances
-            val2_data = Dataset(
-                root_dir=root_data,
-                ctgy_obj=args.item,
-                mode='test',
-                name_dset=args.name_data,
-                batch_size=batch_size,
-                n_max_parts=n_max_parts,
-                add_noise=conf.is_val_data_add_noise(),
-                nocs_type=nocs_type,
-                domain='unseen',
-                parametri_type=conf.get_parametri_type(),
-                fixed_order=True,
-                first_n=conf.get_val_data_first_n(),
-                is_debug=is_debug)
+            # # unseen instances
+            # val2_data = Dataset(
+            #     root_dir=root_data,
+            #     ctgy_obj=args.item,
+            #     mode='test',
+            #     name_dset=args.name_data,
+            #     batch_size=batch_size,
+            #     n_max_parts=n_max_parts,
+            #     add_noise=conf.is_val_data_add_noise(),
+            #     nocs_type=nocs_type,
+            #     domain='unseen',
+            #     parametri_type=conf.get_parametri_type(),
+            #     fixed_order=True,
+            #     first_n=conf.get_val_data_first_n(),
+            #     is_debug=is_debug,        
+            #     is_gen=is_gen)
 
             net.train(
                 sess,
                 train_data=train_data,
-                vals_data=[val1_data, val2_data],
+                # vals_data=[val1_data, val2_data],
+                vals_data=[val1_data],
                 n_epochs=conf.get_n_epochs(),
                 val_interval=conf.get_val_interval(),
                 snapshot_interval=conf.get_snapshot_interval(),
                 model_dir=conf.get_out_model_dir(),
                 log_dir=conf.get_log_dir(),
             )
+        stop = time.time()
+        print(str(stop - start) + " seconds")

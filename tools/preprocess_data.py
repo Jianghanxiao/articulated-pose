@@ -82,6 +82,7 @@ class PoseDataset():
         meta_dict_obj     = {}
         urdf_dict_obj     = {}
         for ins in instances_per_obj:
+            # pdb.set_trace()
             if selected_list is not None and ins not in selected_list:
                 continue
             base_path = self.dataset_render + '/' + obj_category + '/' + ins
@@ -383,6 +384,8 @@ class PoseDataset():
 
 if __name__ == '__main__':
     #>>>>>>>>>>>>>>>>>>>>>>>>> config here >>>>>>>>>>>>>>>>>>>>>>>#
+    start = time.time()
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', default='shape2motion', help='name of the dataset we use') # todo
     parser.add_argument('--item', default='eyeglasses', help='name of the dataset we use')
@@ -410,3 +413,6 @@ if __name__ == '__main__':
 
     # 3. split data into train & test
     split_dataset(root_dset, [item], args, test_ins=infos.datasets[item].test_list, spec_ins=infos.datasets[item].spec_list, train_ins=infos.datasets[item].train_list)
+
+    stop = time.time()
+    print(str(stop - start) + " seconds")
