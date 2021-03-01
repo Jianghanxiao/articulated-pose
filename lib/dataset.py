@@ -73,6 +73,7 @@ class Dataset:
                     self.hdf5_file_list.append(hdf5_file)
 
                 line = fp.readline()
+
         if is_debug:
             print('hdf5_file_list: ', len(self.hdf5_file_list), self.hdf5_file_list[0])
         if not fixed_order:
@@ -207,21 +208,21 @@ class Dataset:
             directory = root_dset + "/pickle/"
             if not os.path.exists(directory):
                 os.makedirs(directory)
-            with open(root_dset + "/pickle/{}-{}-{}.pkl".format(obj_category, self.mode, self.domain), "wb") as f:
+            with open(root_dset + "/pickle/{}.pkl".format(obj_category), "wb") as f:
                 pickle.dump(all_factors, f)
-            with open(root_dset + "/pickle/{}-{}-{}_corners.pkl".format(obj_category, self.mode, self.domain), "wb") as fc:
+            with open(root_dset + "/pickle/{}_corners.pkl".format(obj_category), "wb") as fc:
                 pickle.dump(all_corners, fc)
-            with open(root_dset + "/pickle/{}-{}-{}_pts.pkl".format(obj_category, self.mode, self.domain), 'wb') as fp:
+            with open(root_dset + "/pickle/{}_pts.pkl".format(obj_category), 'wb') as fp:
                 pickle.dump(pts_m, fp)
         else:
             root_dset   = self.root_dir
             # open a file, where you stored the pickled data
-            file = open(root_dset + "/pickle/{}-{}-{}.pkl".format(obj_category, self.mode, self.domain),"rb")
+            file = open(root_dset + "/pickle/{}.pkl".format(obj_category),"rb")
             # dump information to that file
             data = pickle.load(file)
             all_factors = data
             file.close()
-            fc = open(root_dset + "/pickle/{}-{}-{}_corners.pkl".format(obj_category, self.mode, self.domain), "rb")
+            fc = open(root_dset + "/pickle/{}_corners.pkl".format(obj_category), "rb")
             all_corners = pickle.load(fc)
             fc.close()
         if is_debug:

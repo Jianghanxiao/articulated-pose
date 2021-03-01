@@ -68,11 +68,12 @@ if __name__ == '__main__':
     all_files = os.listdir(directory_subs)
     valid_files = []
     for k in range(30):
-        curr_file = '{}_{}_{}_{}_rt_ours_{}_{}.pkl'.format(baseline_exp, args.domain, args.nocs, args.item, choose_threshold, k)
+        curr_file = '{}_{}_{}_{}_rt_ours_{}_{}.pkl'.format(main_exp, args.domain, args.nocs, args.item, choose_threshold, k)
         if curr_file in all_files:
             valid_files.append(directory_subs + '/' + curr_file)
     valid_files.sort()
     print(valid_files)
+
     result_files = {'pn_gt': pn_gt_file, 'gn_gt': gn_gt_file, 'nonlinear': valid_files}
     test_items  = list(result_files.keys())[-2:] # ['baseline', 'nonlinear']
     datas       = {}
@@ -94,6 +95,7 @@ if __name__ == '__main__':
                 datas[key] = pickle.load(f)
                 basenames[key] = list(datas[key].keys())
                 print('number of data for {} : {}'.format(key, len(basenames[key])))
+
 
     #
     # breakpoint()
@@ -258,6 +260,7 @@ if __name__ == '__main__':
                 angle_err_all.append(angle_err)
                 dist_err_all.append(dist_err)
         except:
+            print('ERROR!!!!')
             pass
     r_diff_arr = np.array(angle_err_all) # num * k
     t_diff_arr = np.array(dist_err_all)  # num * k

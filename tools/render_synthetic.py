@@ -10,7 +10,6 @@ Func: data rendering from URDF
 """
 import numpy as np
 import pybullet
-import pdb
 import copy 
 
 # here we add one
@@ -41,6 +40,10 @@ Dumper.add_representer(str, SafeRepresenter.represent_str)
 import _init_paths
 from global_info import global_info
 from lib.data_utils import get_model_pts, get_urdf, get_urdf_mobility
+
+def breakpoint():
+    import pdb
+    pdb.set_trace()
 
 # Step through simulation time
 def step_simulation():
@@ -213,6 +216,7 @@ def render_data(data_root, name_obj, cur_urdf, args=None, cam_dis=1, _WRITE_FLAG
                     check_mask = True
 
                     num_parts = num_joints + 1
+                    breakpoint()
                     
                     for c in range(1, num_parts):
                         if np.sum(np_mask_arr == c) < 10:
@@ -240,7 +244,7 @@ def render_data(data_root, name_obj, cur_urdf, args=None, cam_dis=1, _WRITE_FLAG
                                                     (5, list(lstate[5]))]
                                 )
                                 # print('Joint {} lstate under {} : \n'.format(joint, steeringAngleArray[simu_cnt, :]), lstate[4:6])
-
+                        breakpoint()
                         if _WRITE_FLAG is True:
                             cv2.imwrite(rgb_name, np_rgb_arr)
                             cv2.imwrite(depth_img_name, np_depth_arr)
@@ -295,7 +299,7 @@ if __name__ == "__main__":
         _WRITE   = False
         _RENDER  = True
         _CREATE  = True
-        _USE_GUI = True
+        _USE_GUI = False
     else:
         _WRITE   = True
         _RENDER  = True

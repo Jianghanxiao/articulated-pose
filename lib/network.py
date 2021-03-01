@@ -276,6 +276,8 @@ class Network(object):
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
         for batch in dset.create_iterator():
+            import pdb
+            pdb.set_trace()
             feed_dict = self.create_feed_dict(batch, is_training=False)
             loss_dict = {
                 'total_loss': self.total_loss,

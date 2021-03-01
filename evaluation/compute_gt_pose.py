@@ -5,6 +5,7 @@ import time
 import h5py
 import pickle
 import argparse
+import pdb
 
 import _init_paths
 from lib.data_utils import get_demo_h5, get_full_test
@@ -49,7 +50,7 @@ if __name__ == '__main__':
     save_path = base_path + '/pickle/{}/'.format(main_exp)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-        
+
     problem_ins = []
     start_time = time.time()
     for i in range(len(test_group)):

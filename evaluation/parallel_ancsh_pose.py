@@ -193,7 +193,9 @@ def joint_transformation_verifier(dataset, model, inlier_th):
     return score, [inliers0, inliers1]
 
 def solver_ransac_nonlinear(s_ind, e_ind, test_exp, baseline_exp, choose_threshold, num_parts, test_group, problem_ins, rts_all, file_name):
-    USE_BASELINE = True
+    if s_ind >= e_ind:
+        return
+    USE_BASELINE = False
     all_rts   = {}
     mean_err  = {'baseline': [], 'nonlinear': []}
     if num_parts == 2:
@@ -210,6 +212,7 @@ def solver_ransac_nonlinear(s_ind, e_ind, test_exp, baseline_exp, choose_thresho
         s_raw_err   = {'baseline': [[], [], [], []], 'nonlinear': [[], [], [], []]}
     print('working on ', my_dir + '/results/test_pred/{}/ with {} data'.format(test_exp, len(test_group)))
     start_time = time.time()
+
     for i in range(s_ind, e_ind):
         # try:
         print('\n Checking {}th data point: {}'.format(i, test_group[i]))
@@ -220,19 +223,19 @@ def solver_ransac_nonlinear(s_ind, e_ind, test_exp, baseline_exp, choose_thresho
         rts_dict = rts_all[basename]
         scale_gt = rts_dict['scale']['gt'] # list of 2, for part 0 and part 1
         rt_gt    = rts_dict['rt']['gt']    # list of 2, each is 4*4 Hom transformation mat, [:3, :3] is rotation
-        nocs_err_pn   = rts_dict['nocs_err']
+        # nocs_err_pn   = rts_dict['nocs_err']
         f = h5py.File(my_dir + '/results/test_pred/{}/{}.h5'.format(test_exp, basename), 'r')
-        fb = h5py.File(my_dir + '/results/test_pred/{}/{}.h5'.format(baseline_exp, basename), 'r')
+        # fb = h5py.File(my_dir + '/results/test_pred/{}/{}.h5'.format(baseline_exp, basename), 'r')
         print('using part nocs prediction')
         nocs_pred = f['nocs_per_point']
         nocs_gt   = f['nocs_gt']
         mask_pred      =  f['instance_per_point'][()]
         joint_cls_gt   =  f['joint_cls_gt'][()]
-        if USE_BASELINE:
-            print('using baseline part NOCS')
-            nocs_pred = fb['nocs_per_point']
-            nocs_gt   = fb['nocs_gt']
-            mask_pred = fb['instance_per_point'][()]
+        # if USE_BASELINE:
+        #     print('using baseline part NOCS')
+        #     nocs_pred = fb['nocs_per_point']
+        #     nocs_gt   = fb['nocs_gt']
+        #     mask_pred = fb['instance_per_point'][()]
         mask_gt       =  f['cls_gt'][()]
         cls_per_pt_pred  = np.argmax(mask_pred, axis=1)
 
@@ -254,34 +257,34 @@ def solver_ransac_nonlinear(s_ind, e_ind, test_exp, baseline_exp, choose_thresho
         rpy_err = {'baseline': [], 'nonlinear': []}
         scale_err= {'baseline': [], 'nonlinear': []}
 
-        for j in range(num_parts):
-            source0 = nocs_pred[partidx[j], 3*j:3*(j+1)]
-            target0 = f['P'][partidx[j], :3]
+        # for j in range(num_parts):
+        #     source0 = nocs_pred[partidx[j], 3*j:3*(j+1)]
+        #     target0 = f['P'][partidx[j], :3]
 
-            niter = 10000
-            inlier_th = choose_threshold
+        #     niter = 10000
+        #     inlier_th = choose_threshold
 
-            dataset = dict()
-            dataset['source'] = source0
-            dataset['target'] = target0
-            dataset['nsource'] = source0.shape[0]
-            best_model, best_inliers = ransac(dataset, single_transformation_estimator, single_transformation_verifier, inlier_th, niter)
-            rdiff = rot_diff_degree(best_model['rotation'], rt_gt[j][:3, :3])
-            tdiff = np.linalg.norm(best_model['translation']-rt_gt[j][:3, 3])
-            sdiff = np.linalg.norm(best_model['scale']-scale_gt[j][0])
-            print('part %d -- rdiff: %f degree, tdiff: %f, sdiff %f, ninliers: %f, npoint: %f' % (j, rdiff, tdiff, sdiff, np.sum(best_inliers), best_inliers.shape[0]))
-            target0_fit = best_model['scale'] * np.matmul(best_model['rotation'], source0.T) + best_model['translation'].reshape((3, 1))
-            target0_fit = target0_fit.T
-            best_model0 = best_model
-            rpy_err['baseline'].append(rdiff)
-            xyz_err['baseline'].append(tdiff)
-            scale_err['baseline'].append(sdiff)
-            r_raw_err['baseline'][j].append(rdiff)
-            t_raw_err['baseline'][j].append(tdiff)
-            s_raw_err['baseline'][j].append(sdiff)
-            scale_dict['baseline'].append(best_model0['scale'])
-            r_dict['baseline'].append(best_model0['rotation'])
-            t_dict['baseline'].append(best_model0['translation'])
+        #     dataset = dict()
+        #     dataset['source'] = source0
+        #     dataset['target'] = target0
+        #     dataset['nsource'] = source0.shape[0]
+        #     best_model, best_inliers = ransac(dataset, single_transformation_estimator, single_transformation_verifier, inlier_th, niter)
+        #     rdiff = rot_diff_degree(best_model['rotation'], rt_gt[j][:3, :3])
+        #     tdiff = np.linalg.norm(best_model['translation']-rt_gt[j][:3, 3])
+        #     sdiff = np.linalg.norm(best_model['scale']-scale_gt[j][0])
+        #     print('part %d -- rdiff: %f degree, tdiff: %f, sdiff %f, ninliers: %f, npoint: %f' % (j, rdiff, tdiff, sdiff, np.sum(best_inliers), best_inliers.shape[0]))
+        #     target0_fit = best_model['scale'] * np.matmul(best_model['rotation'], source0.T) + best_model['translation'].reshape((3, 1))
+        #     target0_fit = target0_fit.T
+        #     best_model0 = best_model
+        #     rpy_err['baseline'].append(rdiff)
+        #     xyz_err['baseline'].append(tdiff)
+        #     scale_err['baseline'].append(sdiff)
+        #     r_raw_err['baseline'][j].append(rdiff)
+        #     t_raw_err['baseline'][j].append(tdiff)
+        #     s_raw_err['baseline'][j].append(sdiff)
+        #     scale_dict['baseline'].append(best_model0['scale'])
+        #     r_dict['baseline'].append(best_model0['rotation'])
+        #     t_dict['baseline'].append(best_model0['translation'])
 
         for j in range(1, num_parts):
             niter = 200
@@ -362,8 +365,8 @@ def solver_ransac_nonlinear(s_ind, e_ind, test_exp, baseline_exp, choose_thresho
         t_err_base[np.where(np.isnan(t_err_base))] = 0
         t_err_nonl = np.array(t_raw_err['nonlinear'][j])
         t_err_nonl[np.where(np.isnan(t_err_nonl))] = 0
-        print('mean rotation err of part {}: \n'.format(j), 'baseline: {}'.format(r_err_base.mean()), 'nonlin: {}'.format(r_err_nonl.mean()) ) #
-        print('mean translation err of part {}: \n'.format(j), 'baseline: {}'.format(t_err_base.mean()), 'nonlin: {}'.format(t_err_nonl.mean())) #
+        print('mean rotation err of part {}: \n'.format(j), 'baseline: {}'.format(-1), 'nonlin: {}'.format(r_err_nonl.mean()) ) #
+        print('mean translation err of part {}: \n'.format(j), 'baseline: {}'.format(-1), 'nonlin: {}'.format(t_err_nonl.mean())) #
     end_time = time.time()
     # print('Post-processing {} data entries takes {} seconds'.format(e_ind - s_ind, end_time - start_time))
     print('saving to ', file_name)

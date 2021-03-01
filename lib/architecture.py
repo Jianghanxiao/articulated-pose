@@ -1,4 +1,5 @@
 import os, sys
+from re import I
 BASE_DIR = os.path.dirname(__file__)
 sys.path.append(BASE_DIR)
 sys.path.append(os.path.join(BASE_DIR, '..'))
@@ -126,7 +127,7 @@ def get_per_point_model_new(scope, P, n_max_parts, is_training, bn_decay, early_
         else:
             W, nocs_per_points, confi_per_points = net_results
 
-        joint_axis, unitvec, heatmap, joint_cls = joint_est_model('joint_net', X=net, is_training=is_training, bn_decay=bn_decay, pred_joint_ind=pred_joint_ind)
+        joint_axis, unitvec, heatmap, joint_cls = joint_est_model('joint_net', n_max_parts=n_max_parts, X=net, is_training=is_training, bn_decay=bn_decay, pred_joint_ind=pred_joint_ind)
 
     W = tf.nn.softmax(W, axis=2) # BxNxK # maximum
     confi_per_points = tf.nn.sigmoid(confi_per_points)

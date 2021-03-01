@@ -367,6 +367,7 @@ class PoseDataset():
 
         ################# for debug only, let me know if you have questions #################
         if self.is_debug:
+            print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
             figure = plt.figure(dpi=200)
             ax = plt.subplot(121)
             plt.imshow(img)
@@ -410,10 +411,12 @@ if __name__ == '__main__':
 
     # # 2. preprocess and save
     for i in range(0, len(PoseData.list_rgb)):
+        # print(PoseData.list_rgb[i])
         data = PoseData.__preprocess_and_save__(i)
+        break
 
     # 3. split data into train & test
-    split_dataset(root_dset, [item], args, test_ins=infos.datasets[item].test_list, spec_ins=infos.datasets[item].spec_list, train_ins=infos.datasets[item].train_list)
+    # split_dataset(root_dset, [item], args, test_ins=infos.datasets[item].test_list, spec_ins=infos.datasets[item].spec_list, train_ins=infos.datasets[item].train_list)
 
-    stop = time.time()
-    print(str(stop - start) + " seconds")
+    # stop = time.time()
+    # print(str(stop - start) + " seconds")

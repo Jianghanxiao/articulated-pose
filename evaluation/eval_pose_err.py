@@ -13,6 +13,7 @@ import json
 import os.path
 import sys
 import argparse
+import pdb
 
 import _init_paths
 from global_info import global_info
@@ -54,15 +55,16 @@ if __name__ == '__main__':
     my_dir          = infos.base_path
     group_dir       = infos.group_path
     base_path       = my_dir + '/results/test_pred'
-    root_dset       = my_dir + '/' + name_dset
-    if args.item in ['drawer']:
-        root_dset    = group_dir + '/' + name_dset
+    root_dset       = my_dir + '/dataset/' + name_dset
+    # if args.item in ['drawer']:
+    #     root_dset    = group_dir + '/' + name_dset
 
     directory = my_dir + '/results/pickle/{}'.format(main_exp)
-    if args.nocs == 'ANCSH':
-        baseline_file = directory + '/{}_{}_{}_rt_pn.pkl'.format(args.domain, 'ANCSH', args.item)
-    else:
-        baseline_file = directory + '/{}_{}_{}_{}_rt_gn.pkl'.format(main_exp, args.domain, 'NAOCS', args.item)
+    # if args.nocs == 'ANCSH':
+    #     baseline_file = directory + '/{}_{}_{}_rt_pn.pkl'.format(args.domain, 'ANCSH', args.item)
+    # else:
+    #     baseline_file = directory + '/{}_{}_{}_{}_rt_gn.pkl'.format(main_exp, args.domain, 'NAOCS', args.item)
+    baseline_file = None
 
     pn_gt_file    = my_dir + '/results/pickle/{}/{}_{}_{}_rt.pkl'.format(main_exp, args.domain, 'ANCSH', args.item)
     gn_gt_file    = my_dir + '/results/pickle/{}/{}_{}_{}_rt.pkl'.format(main_exp, args.domain, 'NAOCS', args.item)
@@ -71,13 +73,14 @@ if __name__ == '__main__':
     all_files   = os.listdir(directory_subs)
     valid_files = []
     for k in range(30):
-        curr_file = '{}_{}_{}_{}_rt_ours_{}_{}.pkl'.format(npcs_exp, args.domain, 'ANCSH', args.item, choose_threshold, k)
+        curr_file = '{}_{}_{}_{}_rt_ours_{}_{}.pkl'.format(main_exp, args.domain, 'ANCSH', args.item, choose_threshold, k)
         if curr_file in all_files:
             valid_files.append(directory_subs + '/' + curr_file)
     valid_files.sort() #
     result_files = {'pn_gt': pn_gt_file, 'gn_gt': gn_gt_file, 'baseline': baseline_file, 'nonlinear': valid_files}
 
-    test_items = list(result_files.keys())[-2:] # ['baseline', 'nonlinear']
+    # test_items = list(result_files.keys())[-2:] # ['baseline', 'nonlinear']
+    test_items = ['nonlinear']
     datas       = {}
     basenames   = {}
     n_raw_err   = {'baseline': [], 'nonlinear': []}
@@ -87,7 +90,10 @@ if __name__ == '__main__':
     iou_rat     = {'baseline': [], 'nonlinear': []}
     r_diff_raw_err   = {'baseline': [], 'nonlinear': []}
     t_diff_raw_err   = {'baseline': [], 'nonlinear': []}
+
     for key, file_name in result_files.items():
+        if file_name == None:
+            continue
         if key == 'nonlinear':
             datas[key] = {}
             if isinstance(file_name, list):
@@ -175,11 +181,12 @@ if __name__ == '__main__':
     with open(root_dset + "/pickle/{}_corners.pkl".format(args.item), "rb") as fc:
         all_corners = pickle.load(fc)
     bbox3d_all    = {}
+
     for instance in test_ins:
         if args.item in ['drawer']:
             target_order =  infos.datasets[args.item].spec_map[instance]
-            path_urdf = group_dir + '/sapien/objects/' + '/' + args.item + '/' + instance
-            urdf_ins  = get_urdf_mobility(path_urdf)
+            path_urdf = my_dir + '/dataset/sapien/urdf/' + args.item + '/' + instance
+            urdf_ins  = get_urdf_mobility(path_urdf, False)
             joint_rpy = urdf_ins['joint']['rpy'][target_order[0]]
             rot_mat   = euler_matrix(joint_rpy[0], joint_rpy[1], joint_rpy[2])[:3, :3]
 
@@ -209,7 +216,8 @@ if __name__ == '__main__':
         volume_err_all = {'baseline':[], 'nonlinear':[]}
         try:
             basename = basenames['nonlinear'][i]
-            for key in ['baseline', 'nonlinear']:
+            # for key in ['baseline', 'nonlinear']:
+            for key in ['nonlinear']:
                 # print(key)
                 cur_data = datas[key]
                 if basename not in cur_data or cur_data[ basename ]['scale'] is None or cur_data[ basename ]['scale'] is [] or np.any(np.isnan(cur_data[ basename ]['translation'][key])) :
@@ -232,12 +240,12 @@ if __name__ == '__main__':
 
                 # retrieve point cloud, use pred part nocs to get Amodal BBox
                 if key == 'nonlinear':
-                    f = h5py.File(my_dir + '/results/test_pred/{}/{}.h5'.format(npcs_exp, basename), 'r')
+                    f = h5py.File(my_dir + '/results/test_pred/{}/{}.h5'.format(main_exp, basename), 'r')
                     nocs_pred = f['nocs_per_point'][()]
                     nocs_gt   = f['nocs_gt'][()]
                 else:
-                    f = h5py.File(my_dir + '/results/test_pred/{}/{}.h5'.format(main_exp, basename), 'r')
-                    nocs_pred = f['gocs_per_point'][()]
+                    f = h5py.File(my_dir + '/results/test_pred/{}/{}.h5'.format(npcs_exp, basename), 'r')
+                    nocs_pred = f['nocs_per_point'][()]
                     nocs_gt   = f['nocs_gt_g'][()]
 
                 input_pts  =  f['P'][()]
@@ -271,6 +279,7 @@ if __name__ == '__main__':
                     volume_err_per_part.append( scale_pred[0]*scale_pred[1]*scale_pred[2] * s[j]/(scale_gt[0] * scale_gt[1] * scale_gt[2] * s_gt[j][0]) - 1)
                 boundary_all[key][basename] = boundary
         except:
+            print('ERROR 1')
             pass
 
     for key, cur_data in datas.items():
@@ -304,7 +313,8 @@ if __name__ == '__main__':
                 r_diff_err   = []
                 t_diff_err   = []
 
-                for j in range(1, num_parts):
+                # for j in range(1, num_parts):
+                for j in range(num_parts):
                     r0 = r[0]
                     r1 = r[j]
                     r_diff_pred = np.matmul(r0.T, r1)
@@ -335,7 +345,7 @@ if __name__ == '__main__':
                 r_diff_raw_err[key].append(r_diff_err)
                 t_diff_raw_err[key].append(t_diff_err)
             except:
-                # print('something is wrong')
+                print('something is wrong')
                 pass
 
     if args.item == 'drawer':
@@ -345,7 +355,7 @@ if __name__ == '__main__':
             # print(t_diff_arr)
             num_valid  = t_diff_arr.shape[0]
             t_diff = []
-            for j in range(num_parts - 1):
+            for j in range(num_parts):
                 t_diff.append(np.sum( t_diff_arr[:, j] ) / num_valid)
             print(item[0:8], " ".join(["{:0.4f}".format(x) for x in t_diff]))
         print('\n')
@@ -357,7 +367,7 @@ if __name__ == '__main__':
             r_diff_arr[np.where(np.isnan(r_diff_arr))] = 0
             num_valid  = r_diff_arr.shape[0]
             r_diff = []
-            for j in range(num_parts - 1):
+            for j in range(num_parts):
                 r_diff.append(np.sum( r_diff_arr[:, j] ) / num_valid)
             print(item[0:8], " ".join(["{:0.4f}".format(x) for x in r_diff]))
         print('\n')
