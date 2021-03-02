@@ -203,7 +203,7 @@ class global_info(object):
         #     group_path= '/groups/CESCA-CV'
 
         # self.base_path = base_path
-        self.base_path = '/Users/shawn/Desktop/articulated-pose'
+        self.base_path = '/home/hja40/Desktop/Research/articulated-pose'
         self.group_path= group_path
 
 if __name__ == '__main__':

@@ -229,7 +229,7 @@ def get_pose(root_dset, obj_category, item, art_index, frame_order, mode='train'
 
     return parts_model2world, viewMat, projMat
 
-def get_urdf_mobility(inpath, verbose=True):
+def get_urdf_mobility(inpath, verbose=False):
     urdf_ins = {}
     tree_urdf     = ET.parse(inpath + "/mobility.urdf") # todo
     num_real_links= len(tree_urdf.findall('link'))
