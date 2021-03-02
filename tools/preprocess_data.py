@@ -488,26 +488,16 @@ class PoseDataset:
 
         ################# for debug only, let me know if you have questions #################
         if self.is_debug:
-            # figure = plt.figure(dpi=200)
-            # ax = plt.subplot(121)
-            # plt.imshow(img)
-            # plt.title('RGB image')
-            # ax1 = plt.subplot(122)
-            # plt.imshow(depth)
-            # plt.title('depth image')
-            # plt.show()
-            plot3d_pts(
-                [parts_cloud_cam],
-                [["part {}".format(i) for i in range(len(parts_cloud_cam))]],
-                s=5,
-                title_name=["camera coords"],
-            )
-            plot3d_pts(
-                [parts_cloud_world],
-                [["part {}".format(i) for i in range(len(parts_cloud_world))]],
-                s=5,
-                title_name=["world coords"],
-            )
+            figure = plt.figure(dpi=200)
+            ax = plt.subplot(121)
+            plt.imshow(img)
+            plt.title('RGB image')
+            ax1 = plt.subplot(122)
+            plt.imshow(depth)
+            plt.title('depth image')
+            plt.show()
+            plot3d_pts([parts_cloud_cam], [['part {}'.format(i) for i in range(len(parts_cloud_cam))]], s=5, title_name=['camera coords'])
+            plot3d_pts([parts_cloud_world], [['part {}'.format(i) for i in range(len(parts_cloud_world))]], s=5, title_name=['world coords'])
             plot3d_pts([parts_cloud_canon], [['part {}'.format(i) for i in range(len(parts_cloud_canon))]], s=5, title_name=['canon coords'])
             plot3d_pts([parts_cloud_urdf], [['part {}'.format(i) for i in range(len(parts_cloud_urdf))]], s=5, title_name=['urdf coords'])
 
