@@ -19,7 +19,7 @@ import numpy as np
 import cv2
 from PIL import Image
 import xml.etree.ElementTree as ET
-
+import multiprocessing
 from collections import OrderedDict
 
 # from yaml import CLoader as Loader, CDumper as Dumper
@@ -503,6 +503,8 @@ class PoseDataset:
 
         return None
 
+def run(PoseData, index):
+    PoseData.__preprocess_and_save__(index)
 
 if __name__ == "__main__":
     # >>>>>>>>>>>>>>>>>>>>>>>>> config here >>>>>>>>>>>>>>>>>>>>>>>#
@@ -547,10 +549,15 @@ if __name__ == "__main__":
     print("number of images: ", len(PoseData.list_rgb))
 
     # # 2. preprocess and save
+    pool = multiprocessing.Pool(processes=16)
     for i in range(0, len(PoseData.list_rgb)):
         # print(PoseData.list_rgb[i])
-        data = PoseData.__preprocess_and_save__(i)
+        # data = PoseData.__preprocess_and_save__(i)
+        pool.apply_async(run, (PoseData, i,))
+    
 
+    pool.close()
+    pool.join()
     # 3. split data into train & test
     split_dataset(root_dset, [item], args, test_ins=infos.datasets[item].test_list, spec_ins=infos.datasets[item].spec_list, train_ins=infos.datasets[item].train_list)
 
