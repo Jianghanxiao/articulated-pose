@@ -208,4 +208,4 @@ class global_info(object):
 
 if __name__ == '__main__':
     infos = global_info()
-    print(infos.datasets['bike'].dataset_name)
+    print(infos.datasets['eyeglasses'].dataset_name)

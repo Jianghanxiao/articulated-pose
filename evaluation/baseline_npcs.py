@@ -21,6 +21,7 @@ def ransac(dataset, model_estimator, model_verifier, inlier_th, niter=10000):
         if cur_score > best_score:
             best_model = cur_model
             best_inliers = cur_inliers
+            best_score = cur_score
     best_model = model_estimator(dataset, best_inliers)
     return best_model, best_inliers
 
@@ -148,7 +149,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--item', default='oven', help='object category for benchmarking')
     parser.add_argument('--domain', default='unseen', help='which sub test set to choose')
-    parser.add_argument('--nocs', default='ANCSH', help='type of NOCS used to train the model')
+    parser.add_argument('--nocs', default='npcs', help='type of NOCS used to train the model')
     parser.add_argument('--num_exp', default='3.01', help='name of experiment name')
     args = parser.parse_args()
 
@@ -166,7 +167,7 @@ if __name__ == '__main__':
     my_dir          = infos.base_path
     directory       = my_dir + '/results/pickle/{}'.format(main_exp)
     rts_all = pickle.load( open( directory + '/{}_{}_{}_rt.pkl'.format(args.domain, args.nocs, args.item), 'rb' ))
-    
+
     all_test_h5     = os.listdir(my_dir + '/results/test_pred/{}/'.format(args.num_exp))
     test_group      = get_test_group(all_test_h5, unseen_instances, domain=args.domain, spec_instances=special_ins)
 
