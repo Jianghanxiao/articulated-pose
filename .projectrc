@@ -1,2 +1,2 @@
-export PATH="/home/hja40/Desktop/cuda/cuda_9.0/bin/:$PATH"
-export LD_LIBRARY_PATH="/home/hja40/Desktop/cuda/cuda_9.0/lib64/:$LD_LIBRARY_PATH"
+export PATH="/usr/local/cuda-11.0/bin/:$PATH"
+export LD_LIBRARY_PATH="/usr/local/cuda-11.0/lib64/:/localhome/hja40/miniconda3/envs/ANCSH/lib/python3.6/site-packages/tensorflow/:$LD_LIBRARY_PATH"

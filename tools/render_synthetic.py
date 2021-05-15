@@ -216,7 +216,7 @@ def render_data(data_root, name_obj, cur_urdf, args=None, cam_dis=1, _WRITE_FLAG
                     check_mask = True
 
                     num_parts = num_joints + 1
-                    breakpoint()
+                    # breakpoint()
                     
                     for c in range(1, num_parts):
                         if np.sum(np_mask_arr == c) < 10:
@@ -244,7 +244,7 @@ def render_data(data_root, name_obj, cur_urdf, args=None, cam_dis=1, _WRITE_FLAG
                                                     (5, list(lstate[5]))]
                                 )
                                 # print('Joint {} lstate under {} : \n'.format(joint, steeringAngleArray[simu_cnt, :]), lstate[4:6])
-                        breakpoint()
+                        # breakpoint()
                         if _WRITE_FLAG is True:
                             cv2.imwrite(rgb_name, np_rgb_arr)
                             cv2.imwrite(depth_img_name, np_depth_arr)
