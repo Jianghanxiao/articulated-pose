@@ -537,7 +537,6 @@ if __name__ == "__main__":
 
     # 1. collect filenames into all.txt, then create dataset object
     collect_file(root_dset, [item], mode=args.mode)
-<<<<<<< HEAD
     PoseData = PoseDataset(
         root_dset,
         item,
@@ -557,14 +556,3 @@ if __name__ == "__main__":
 
     stop = time.time()
     print(str(stop - start) + " seconds")
-=======
-    PoseData     = PoseDataset(root_dset, item, is_debug=args.debug, mode=args.mode, selected_list=selected_list)
-    print('number of images: ', len(PoseData.list_rgb))
-
-    # 2. preprocess and save
-    for i in range(0, len(PoseData.list_rgb)):
-        data = PoseData.__preprocess_and_save__(i)
-
-    # 3. split .h5 data into train & test
-    split_dataset(root_dset, [item], args, test_ins=infos.datasets[item].test_list, spec_ins=infos.datasets[item].spec_list, train_ins=infos.datasets[item].train_list)
->>>>>>> 267b70a41e9fbbc3ab7a2b50baa5b5ea07e278d2
