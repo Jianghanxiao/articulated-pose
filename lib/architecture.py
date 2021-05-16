@@ -9,7 +9,8 @@ from lib.tf_wrapper import batched_gather
 from pointnet_plusplus.utils import tf_util
 from lib import loss
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 

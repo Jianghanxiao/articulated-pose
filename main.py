@@ -13,7 +13,8 @@ import time
 import pdb
 
 #>>>>>>>>>>>>>>>>>> python lib
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 from tensorflow.python import debug as tf_debug
 from tensorflow.python.tools.inspect_checkpoint import print_tensors_in_checkpoint_file
 
@@ -22,7 +23,7 @@ if __name__ == '__main__':
     tf.set_random_seed(1234)
     # parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config_file', default='/home/hja40/Desktop/Research/articulated-pose/cfg/network_config.yml', help='YAML configuration file')
+    parser.add_argument('--config_file', default='/localhome/hja40/Desktop/Research/articulated-pose/cfg/network_config.yml', help='YAML configuration file')
     parser.add_argument('--name_data', default='shape2motion', help='name of the dataset we use')
     parser.add_argument('--item', default='eyeglasses', help='name of the dataset we use')
     parser.add_argument('--num_expr', default=0.01, help='small set data used for testing')

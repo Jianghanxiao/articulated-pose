@@ -6,8 +6,8 @@ from lib.tf_wrapper import batched_gather
 from constants import DIVISION_EPS
 
 import tensorflow as tf
-import keras
-import keras.backend as K
+from tensorflow import keras
+import tensorflow.keras.backend as K
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 

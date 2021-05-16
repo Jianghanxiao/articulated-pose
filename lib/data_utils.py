@@ -90,6 +90,7 @@ def split_dataset(root_dset, ctgy_objs, args, test_ins, spec_ins=[], train_ins=N
             random.shuffle(name_instances)
             rm_ins = []
             ins_to_remove = test_ins + rm_ins
+
             print(ins_to_remove)
             for instance in ins_to_remove:
                 if instance in name_instances:
@@ -101,7 +102,7 @@ def split_dataset(root_dset, ctgy_objs, args, test_ins, spec_ins=[], train_ins=N
             for instance in train_ins:
                 if len(spec_ins)>0 and instance in spec_ins:
                     continue
-                for dir_arti in glob.glob(root_dset + '/hdf5/' + name_obj + '/train/' + instance + '/*'):
+                for dir_arti in glob.glob(root_dset + '/hdf5/' + name_obj + '/' + instance + '/*'):
                     h5_frames = glob.glob(dir_arti + '/*')
                     h5_list   = []
                     for file in h5_frames:
@@ -116,7 +117,7 @@ def split_dataset(root_dset, ctgy_objs, args, test_ins, spec_ins=[], train_ins=N
                         continue
 
             for instance in test_ins:
-                for dir_arti in glob.glob(root_dset + '/hdf5/' + name_obj + '/test/' + instance + '/*'):
+                for dir_arti in glob.glob(root_dset + '/hdf5/' + name_obj + '/' + instance + '/*'):
                     h5_frames = glob.glob(dir_arti + '/*')
                     h5_list   = []
                     for file in h5_frames:

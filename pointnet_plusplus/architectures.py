@@ -4,7 +4,8 @@ BASE_DIR = os.path.normpath(
 sys.path.append(os.path.join(BASE_DIR, 'utils'))
 
 from pointnet_util import pointnet_sa_module, pointnet_fp_module
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import tf_util
 
 def build_pointnet2_seg(scope, X, out_dims, is_training, bn_decay):
